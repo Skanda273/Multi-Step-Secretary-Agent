@@ -51,12 +51,12 @@ def run_agent():
     return "\n".join(output)
 
 
-iface = gr.Interface(
+demo = gr.Interface(
     fn=run_agent,
     inputs=[],
     outputs="text",
     title="Multi Step Secretary Agent",
-    description="LLM tool-calling agent scheduling meetings"
+    description="LLM tool calling meeting scheduler"
 )
 
-iface.launch()
+demo.launch(server_name="0.0.0.0", server_port=7860)
