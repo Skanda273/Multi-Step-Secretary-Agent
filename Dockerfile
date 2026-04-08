@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.10
 
 WORKDIR /app
 
@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
-CMD ["python", "run.py"]
+CMD ["python", "inference.py"]
