@@ -15,7 +15,7 @@ messages = [
 print("TASK:", instruction)
 
 while not env.done:
-    action, params = agent.get_action(messages, TOOLS)
+    action, params = agent.get_action(messages, tools)
 
     if not action:
         print("No action returned")
