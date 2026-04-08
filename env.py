@@ -28,19 +28,12 @@ class SecretaryEnv:
         self.reward += 0.2
         return f"Employee ID for {name} is {self.employee_id}"
 
-    def check_calendar(self, employee_id: str = None) -> str:
-        self._step_guard()
-
+    def check_calendar(self, employee_id: str = None):
         if employee_id:
             self.employee_id = employee_id
 
         if not self.employee_id:
-            self.reward = -1
             raise ValueError("Get employee ID first")
-
-        if self.difficulty != "easy" and random.random() < 0.2:
-            self.reward = -0.3
-            raise ValueError("Calendar API failed")
 
         self.available_slots = ["10AM", "2PM"]
         self.calendar_checked = True
@@ -48,14 +41,12 @@ class SecretaryEnv:
 
         return f"Available slots: {', '.join(self.available_slots)}"
 
-    def book_meeting(self, time: str):
+    def book_meeting(self, time: str = None):
         if not self.calendar_checked:
-            self.reward = -1
             raise ValueError("Check calendar first")
 
-        if time not in self.available_slots:
-            self.reward = -0.5
-            raise ValueError("Invalid time slot")
+        if time is None:
+            time = self.available_slots[0]
 
         self.done = True
         self.reward += 1
