@@ -33,30 +33,24 @@ def run_agent():
 
         output.append(f"\n[LLM ACTION]: {action} {params}")
 
-        try:
-            result = getattr(env, action)(**params)
-            output.append(f"[TOOL RESULT]: {result}")
+        result = getattr(env, action)(**params)
+        output.append(f"[TOOL RESULT]: {result}")
 
-            messages.append({
-                "role": "tool",
-                "name": action,
-                "content": result
-            })
-
-        except Exception as e:
-            output.append(f"[ERROR]: {e}")
+        messages.append({
+            "role": "tool",
+            "name": action,
+            "content": result
+        })
 
     output.append(f"\nFINAL REWARD: {env.reward}")
 
     return "\n".join(output)
 
 
-demo = gr.Interface(
-    fn=run_agent,
-    inputs=[],
-    outputs="text",
-    title="Multi Step Secretary Agent",
-    description="LLM tool calling meeting scheduler"
-)
+with gr.Blocks() as demo:
+    gr.Markdown("# Multi Step Secretary Agent")
+    btn = gr.Button("Run Agent")
+    output = gr.Textbox(lines=20)
+    btn.click(run_agent, outputs=output)
 
-demo.launch(server_name="0.0.0.0", server_port=7860)
+demo.launch()
