@@ -8,7 +8,10 @@ agent = LLMAgent()
 instruction = env.reset()
 
 messages = [
-    {"role": "system", "content": "You must call tools step by step to schedule meeting."},
+    {
+        "role": "system",
+        "content": "You must call get_employee_id, then check_calendar, then book_meeting. Always finish by calling book_meeting."
+    },
     {"role": "user", "content": instruction}
 ]
 
@@ -16,6 +19,11 @@ print("TASK:", instruction)
 
 while not env.done:
     action, params = agent.get_action(messages, tools)
+
+    # force final step if LLM stops early
+    if not action and env.calendar_checked:
+        action = "book_meeting"
+        params = {}
 
     if not action:
         print("No action returned")
