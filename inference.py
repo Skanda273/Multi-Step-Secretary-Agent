@@ -83,19 +83,19 @@ def run_episode(task_id="easy"):
 
         step_num += 1
 
-    # Return reward safely inside strict (0,1) bounds
-score = float(env.reward)
-
-# Clamp score so validator always accepts it
-score = max(0.01, min(score, 0.99))
-
-print(
-    f'[END] {{"task_id": "{task_id}", '
-    f'"reward": {score:.2f}, '
-    f'"done": {str(env.done).lower()}}}'
-)
-
-return score
+        # Return reward safely inside strict (0,1) bounds
+        score = float(env.reward)
+    
+        # Clamp score so validator always accepts it
+        score = max(0.01, min(score, 0.99))
+        
+        print(
+            f'[END] {{"task_id": "{task_id}", '
+            f'"reward": {score:.2f}, '
+            f'"done": {str(env.done).lower()}}}'
+        )
+    
+    return score
 
 
 if __name__ == "__main__":
