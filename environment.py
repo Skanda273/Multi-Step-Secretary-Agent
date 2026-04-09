@@ -6,7 +6,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.1  # Start at 0.1 to stay strictly > 0.0
+        self.reward = 0.15  # Locked safe start score
         self.done = False
         self.difficulty = "easy"
 
@@ -14,7 +14,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.1
+        self.reward = 0.15
         self.done = False
         
         if self.difficulty == "easy":
@@ -28,21 +28,18 @@ class SecretaryEnv:
         pass
 
     def get_employee_id(self, name: str = "John"):
-        # We accept any name to be flexible
         self.employee_id = f"EMP_{name.upper()}_123"
-        self.reward += 0.1
+        # Score remains 0.15 until final success to keep it simple
         return f"Employee ID for {name} is {self.employee_id}"
 
     def check_calendar(self, employee_id: str = None):
         if employee_id:
             self.employee_id = employee_id
-
         if not self.employee_id:
             raise ValueError("Get employee ID first")
 
         self.available_slots = ["10AM", "2PM", "4PM"]
         self.calendar_checked = True
-        self.reward += 0.2
         return f"Available slots: {', '.join(self.available_slots)}"
 
     def book_meeting(self, time: str = "10AM"):
@@ -50,5 +47,5 @@ class SecretaryEnv:
             raise ValueError("Check calendar first")
 
         self.done = True
-        self.reward += 0.5 # Total reward: 0.1 (init) + 0.1 (id) + 0.2 (cal) + 0.5 (book) = 0.9
+        self.reward = 0.85 # Locked safe success score
         return f"Meeting booked successfully at {time}"

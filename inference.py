@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 from openai import OpenAI
 from environment import SecretaryEnv
 from tools_schema import tools
@@ -43,8 +44,6 @@ def run_episode(task_id="easy"):
         message = response.choices[0].message
 
         if not message.tool_calls:
-            # No more tool calls — agent is done
-            print(f"[INFO] No tool call at step {step_num}, stopping.")
             break
 
         tool_call = message.tool_calls[0]
@@ -61,7 +60,6 @@ def run_episode(task_id="easy"):
         except Exception as e:
             result = str(e)
 
-        # Append assistant message with tool_calls (required by OpenAI API)
         messages.append({
             "role": "assistant",
             "content": None,
@@ -77,7 +75,6 @@ def run_episode(task_id="easy"):
             ]
         })
 
-        # Append tool result
         messages.append({
             "role": "tool",
             "tool_call_id": tool_call.id,
@@ -86,11 +83,14 @@ def run_episode(task_id="easy"):
 
         step_num += 1
 
-    print(f'[END] {{"task_id": "{task_id}", "reward": {env.reward:.2f}, "done": {str(env.done).lower()}}}')
+    # Return exactly the reward value
+    score = float(env.reward)
+    print(f'[END] {{"task_id": "{task_id}", "reward": {score:.2f}, "done": {str(env.done).lower()}}}')
 
-    return env.reward
+    return score
 
 
 if __name__ == "__main__":
-    for task in ["easy", "medium", "hard"]:
-        run_episode(task)
+    # If run as a script, only run the first task or follow command line arg
+    tid = sys.argv[1] if len(sys.argv) > 1 else "easy"
+    run_episode(tid)
