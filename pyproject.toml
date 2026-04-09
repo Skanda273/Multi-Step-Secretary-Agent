@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "multi-step-secretary-agent"
+version = "1.0.0"
+description = "A multi-step secretary AI agent environment for the Meta PyTorch Hackathon."
+requires-python = ">=3.10"
+dependencies = [
+    "openai",
+    "python-dotenv",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "scikit-learn",
+    "joblib",
+]
+
+[tool.openenv]
+name = "Multi-Step-Secretary-Agent"
+version = "1.0.0"
