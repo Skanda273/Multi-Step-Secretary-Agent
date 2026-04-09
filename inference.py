@@ -1,6 +1,6 @@
 import os
 import json
-from env import SecretaryEnv
+from environment import SecretaryEnv
 from llm_agent import LLMAgent
 from tools_schema import tools
 

@@ -5,7 +5,7 @@ from typing import Dict, Any
 import uvicorn
 import os
 
-from env import SecretaryEnv
+from environment import SecretaryEnv
 
 app = FastAPI()
 env = SecretaryEnv()
