@@ -1,42 +1,34 @@
 from env import SecretaryEnv
-from llm_agent import LLMAgent
-from tools_schema import tools
 
 
-def run():
+def run_episode(task=None):
     env = SecretaryEnv()
-    agent = LLMAgent()
-
     instruction = env.reset()
-
-    messages = [
-        {"role": "system", "content": "Call tools step by step"},
-        {"role": "user", "content": instruction}
-    ]
 
     logs = []
 
-    while not env.done:
-        action, params = agent.get_action(messages, tools)
+    # step 1
+    result = env.get_employee_id("John")
+    logs.append({"action": "get_employee_id", "result": result})
 
-        if not action and env.calendar_checked:
-            action = "book_meeting"
-            params = {}
+    # step 2
+    result = env.check_calendar(env.employee_id)
+    logs.append({"action": "check_calendar", "result": result})
 
-        result = getattr(env, action)(**params)
-
-        logs.append({
-            "action": action,
-            "result": result
-        })
-
-        messages.append({
-            "role": "tool",
-            "name": action,
-            "content": result
-        })
+    # step 3
+    result = env.book_meeting("10AM")
+    logs.append({"action": "book_meeting", "result": result})
 
     return {
         "reward": env.reward,
         "steps": logs
     }
+
+
+def main():
+    output = run_episode()
+    print(output)
+
+
+if __name__ == "__main__":
+    main()
