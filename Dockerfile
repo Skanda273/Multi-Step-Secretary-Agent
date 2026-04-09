@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 
-CMD ["python", "inference.py"]
+CMD ["/bin/bash", "start.sh"]
