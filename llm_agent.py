@@ -1,14 +1,20 @@
+import os
+from openai import OpenAI
+
 class LLMAgent:
-    def get_action(self, messages, tools):
-        text = messages[-1]["content"].lower()
+    def __init__(self):
+        self.client = OpenAI(
+            base_url=os.environ["API_BASE_URL"],
+            api_key=os.environ["API_KEY"]
+        )
 
-        if "schedule" in text:
-            return "get_employee_id", {"name": "John"}
+    def get_action(self, observation):
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",  # or any model they allow
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that plans steps to schedule meetings."},
+                {"role": "user", "content": observation}
+            ]
+        )
 
-        if "employee" in text:
-            return "check_calendar", {"employee_id": "EMP123"}
-
-        if "calendar" in text:
-            return "book_meeting", {"time": "10AM"}
-
-        return None, None
+        return response.choices[0].message.content
