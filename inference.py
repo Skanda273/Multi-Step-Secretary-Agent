@@ -99,6 +99,7 @@ return score
 
 
 if __name__ == "__main__":
-    # If run as a script, only run the first task or follow command line arg
-    tid = sys.argv[1] if len(sys.argv) > 1 else "easy"
-    run_episode(tid)
+    tasks = ["easy", "medium", "hard"]
+
+    for tid in tasks:
+        run_episode(tid)
