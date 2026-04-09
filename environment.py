@@ -6,7 +6,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0
+        self.reward = 0.01  # Start with a tiny non-zero value to stay > 0.0
         self.done = False
         self.difficulty = "easy"
 
@@ -14,7 +14,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0
+        self.reward = 0.01
         self.done = False
         self.difficulty = "easy"
 
@@ -25,7 +25,7 @@ class SecretaryEnv:
 
     def get_employee_id(self, name: str = "John"):
         self.employee_id = "EMP123"
-        self.reward += 0.2
+        self.reward += 0.1
         return f"Employee ID for {name} is {self.employee_id}"
 
     def check_calendar(self, employee_id: str = None):
@@ -37,8 +37,7 @@ class SecretaryEnv:
 
         self.available_slots = ["10AM", "2PM"]
         self.calendar_checked = True
-        self.reward += 0.3
-
+        self.reward += 0.2
         return f"Available slots: {', '.join(self.available_slots)}"
 
     def book_meeting(self, time: str = None):
@@ -49,6 +48,6 @@ class SecretaryEnv:
             time = self.available_slots[0]
 
         self.done = True
-        self.reward += 1
+        self.reward += 0.6 # Total reward will be 0.01 + 0.1 + 0.2 + 0.6 = 0.91
 
         return f"Meeting booked at {time}"
