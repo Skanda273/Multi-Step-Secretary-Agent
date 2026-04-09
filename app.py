@@ -1,56 +1,56 @@
-import gradio as gr
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from typing import Dict, Any
+import uvicorn
+import os
+
 from env import SecretaryEnv
-from llm_agent import LLMAgent
-from tools_schema import tools
 
+app = FastAPI()
+env = SecretaryEnv()
 
-def run_agent():
-    env = SecretaryEnv()
-    agent = LLMAgent()
+class ActionRequest(BaseModel):
+    action: str
+    params: Dict[str, Any] = {}
 
-    instruction = env.reset()
+@app.post("/reset")
+async def reset():
+    obs = env.reset()
+    return {"observation": obs, "info": {}}
 
-    messages = [
-        {
-            "role": "system",
-            "content": "You must call get_employee_id, then check_calendar, then book_meeting."
-        },
-        {"role": "user", "content": instruction}
-    ]
+@app.post("/step")
+async def step(req: ActionRequest):
+    try:
+        obs = getattr(env, req.action)(**req.params)
+        return {
+            "observation": obs,
+            "reward": env.reward,
+            "done": env.done,
+            "info": {}
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "observation": str(e),
+            "reward": env.reward,
+            "done": env.done,
+            "info": {}
+        }
 
-    output = []
-    output.append(f"TASK: {instruction}")
+@app.get("/state")
+async def state():
+    return {
+        "employee_id": env.employee_id,
+        "available_slots": env.available_slots,
+        "calendar_checked": env.calendar_checked,
+        "reward": env.reward,
+        "done": env.done,
+        "difficulty": env.difficulty
+    }
 
-    while not env.done:
-        action, params = agent.get_action(messages, tools)
+if os.path.exists("openenv-dashboard/dist"):
+    app.mount("/", StaticFiles(directory="openenv-dashboard/dist", html=True), name="static")
 
-        if not action and env.calendar_checked:
-            action = "book_meeting"
-            params = {}
-
-        if not action:
-            break
-
-        output.append(f"\n[LLM ACTION]: {action} {params}")
-
-        result = getattr(env, action)(**params)
-        output.append(f"[TOOL RESULT]: {result}")
-
-        messages.append({
-            "role": "tool",
-            "name": action,
-            "content": result
-        })
-
-    output.append(f"\nFINAL REWARD: {env.reward}")
-
-    return "\n".join(output)
-
-
-with gr.Blocks() as demo:
-    gr.Markdown("# Multi Step Secretary Agent")
-    btn = gr.Button("Run Agent")
-    output = gr.Textbox(lines=20)
-    btn.click(run_agent, outputs=output)
-
-demo.launch()
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=7860)
