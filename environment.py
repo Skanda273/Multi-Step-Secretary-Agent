@@ -6,7 +6,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.15  # Locked safe start score
+        self.reward = 5  # Locked safe start score
         self.done = False
         self.difficulty = "easy"
 
@@ -14,7 +14,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.15
+        self.reward = 5
         self.done = False
         
         if self.difficulty == "easy":
@@ -47,5 +47,5 @@ class SecretaryEnv:
             raise ValueError("Check calendar first")
 
         self.done = True
-        self.reward = 0.85 # Locked safe success score
+        self.reward = 10 # Locked safe success score
         return f"Meeting booked successfully at {time}"
