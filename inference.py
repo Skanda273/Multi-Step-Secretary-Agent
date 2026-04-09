@@ -1,34 +1,37 @@
+import os
+from openai import OpenAI
 from env import SecretaryEnv
+
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4.1-mini")
+HF_TOKEN = os.getenv("HF_TOKEN")
+
+client = OpenAI(base_url=API_BASE_URL)
 
 
 def run_episode(task=None):
+    print("START")
+
     env = SecretaryEnv()
     instruction = env.reset()
 
-    logs = []
+    print("STEP reset", instruction)
 
-    # step 1
     result = env.get_employee_id("John")
-    logs.append({"action": "get_employee_id", "result": result})
+    print("STEP get_employee_id", result)
 
-    # step 2
     result = env.check_calendar(env.employee_id)
-    logs.append({"action": "check_calendar", "result": result})
+    print("STEP check_calendar", result)
 
-    # step 3
     result = env.book_meeting("10AM")
-    logs.append({"action": "book_meeting", "result": result})
+    print("STEP book_meeting", result)
+
+    print("END", env.reward)
 
     return {
-        "reward": env.reward,
-        "steps": logs
+        "reward": env.reward
     }
 
 
-def main():
-    output = run_episode()
-    print(output)
-
-
 if __name__ == "__main__":
-    main()
+    run_episode()
