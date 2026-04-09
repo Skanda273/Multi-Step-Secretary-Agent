@@ -86,7 +86,7 @@ def run_episode(task_id="easy"):
 
         step_num += 1
 
-    print(f'[END] {{"task_id": "{task_id}", "reward": {env.reward}, "done": {str(env.done).lower()}}}')
+    print(f'[END] {{"task_id": "{task_id}", "reward": {env.reward:.2f}, "done": {str(env.done).lower()}}}')
 
     return env.reward
 

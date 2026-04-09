@@ -6,7 +6,7 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.01  # Start with a tiny non-zero value to stay > 0.0
+        self.reward = 0.1  # Start at 0.1 to stay strictly > 0.0
         self.done = False
         self.difficulty = "easy"
 
@@ -14,17 +14,22 @@ class SecretaryEnv:
         self.employee_id = None
         self.available_slots = []
         self.calendar_checked = False
-        self.reward = 0.01
+        self.reward = 0.1
         self.done = False
-        self.difficulty = "easy"
-
-        return "Schedule a meeting with employee named John"
+        
+        if self.difficulty == "easy":
+            return "Schedule a meeting with employee named John."
+        elif self.difficulty == "medium":
+            return "Find the ID for Alice and check her calendar to book a slot."
+        else:
+            return "Coordinate a meeting with Bob by checking his availability and booking a time."
 
     def _step_guard(self):
         pass
 
     def get_employee_id(self, name: str = "John"):
-        self.employee_id = "EMP123"
+        # We accept any name to be flexible
+        self.employee_id = f"EMP_{name.upper()}_123"
         self.reward += 0.1
         return f"Employee ID for {name} is {self.employee_id}"
 
@@ -35,19 +40,15 @@ class SecretaryEnv:
         if not self.employee_id:
             raise ValueError("Get employee ID first")
 
-        self.available_slots = ["10AM", "2PM"]
+        self.available_slots = ["10AM", "2PM", "4PM"]
         self.calendar_checked = True
         self.reward += 0.2
         return f"Available slots: {', '.join(self.available_slots)}"
 
-    def book_meeting(self, time: str = None):
+    def book_meeting(self, time: str = "10AM"):
         if not self.calendar_checked:
             raise ValueError("Check calendar first")
 
-        if time is None:
-            time = self.available_slots[0]
-
         self.done = True
-        self.reward += 0.6 # Total reward will be 0.01 + 0.1 + 0.2 + 0.6 = 0.91
-
-        return f"Meeting booked at {time}"
+        self.reward += 0.5 # Total reward: 0.1 (init) + 0.1 (id) + 0.2 (cal) + 0.5 (book) = 0.9
+        return f"Meeting booked successfully at {time}"
