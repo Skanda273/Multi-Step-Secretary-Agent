@@ -12,10 +12,10 @@ def run_episode(task_id="easy"):
         instruction = env.reset()
 
         client = OpenAI(
-            base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
-            api_key=os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", "dummy-key-for-validation"))
+            base_url=os.environ.get("API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
+            api_key=os.environ.get("API_KEY", os.environ.get("GEMINI_API_KEY", "AIzaSyCL9mFCRHXcwsCmzX5LXG7eh9xbYRQ5yBs"))
         )
-        model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+        model = os.environ.get("MODEL_NAME", "gemini-2.5-flash")
 
         print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
 
