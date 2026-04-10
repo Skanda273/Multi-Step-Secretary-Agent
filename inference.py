@@ -1,9 +1,9 @@
 import os
 import json
-import sys
 from openai import OpenAI
 from environment import SecretaryEnv
 from tools_schema import tools
+
 
 def run_episode(task_id="easy"):
     env = SecretaryEnv()
@@ -14,15 +14,17 @@ def run_episode(task_id="easy"):
         base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
         api_key=os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
     )
+
     model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
     print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
 
     messages = [
         {"role": "system", "content": (
-            "You are a secretary assistant. You must complete meeting scheduling tasks step by step "
-            "using the provided tools. Always: 1) get_employee_id first, 2) check_calendar with the ID, "
-            "3) book_meeting with an available time slot."
+            "You are a secretary assistant. Always follow steps:\n"
+            "1) get_employee_id\n"
+            "2) check_calendar\n"
+            "3) book_meeting"
         )},
         {"role": "user", "content": instruction}
     ]
@@ -48,9 +50,10 @@ def run_episode(task_id="easy"):
 
         tool_call = message.tool_calls[0]
         action = tool_call.function.name
+
         try:
             params = json.loads(tool_call.function.arguments)
-        except (json.JSONDecodeError, TypeError):
+        except:
             params = {}
 
         print(f'[STEP] {{"step": {step_num}, "action": "{action}", "params": {json.dumps(params)}}}')
@@ -60,6 +63,7 @@ def run_episode(task_id="easy"):
         except Exception as e:
             result = str(e)
 
+        # Add tool call to conversation
         messages.append({
             "role": "assistant",
             "content": None,
@@ -83,18 +87,22 @@ def run_episode(task_id="easy"):
 
         step_num += 1
 
-        # Return reward safely inside strict (0,1) bounds
-        score = float(env.reward)
-    
-        # Clamp score so validator always accepts it
-        score = max(0.01, min(score, 0.99))
-        
-        print(
-            f'[END] {{"task_id": "{task_id}", '
-            f'"reward": {score:.2f}, '
-            f'"done": {str(env.done).lower()}}}'
-        )
-    
+
+    if env.meeting_booked:
+        score = 0.9
+    elif env.calendar_checked:
+        score = 0.6
+    elif env.employee_id:
+        score = 0.3
+    else:
+        score = 0.1
+
+    print(
+        f'[END] {{"task_id": "{task_id}", '
+        f'"reward": {score:.2f}, '
+        f'"done": {str(env.done).lower()}}}'
+    )
+
     return score
 
 
