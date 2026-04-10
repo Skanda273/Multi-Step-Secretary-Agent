@@ -10,6 +10,8 @@ def run_episode(task_id="easy"):
     env.difficulty = task_id
     instruction = env.reset()
 
+    print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
+
     client = OpenAI(
         base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
         api_key=os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
@@ -17,76 +19,70 @@ def run_episode(task_id="easy"):
 
     model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
-    print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
-
     messages = [
-        {"role": "system", "content": (
-            "You are a secretary assistant. Always follow steps:\n"
-            "1) get_employee_id\n"
-            "2) check_calendar\n"
-            "3) book_meeting"
-        )},
+        {"role": "system", "content": "Follow steps: get_employee_id → check_calendar → book_meeting"},
         {"role": "user", "content": instruction}
     ]
 
     step_num = 0
 
-    while not env.done and step_num < 10:
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto"
-            )
-        except Exception as e:
-            print(f"[ERROR] LLM call failed: {e}")
-            break
+    try:
+        while not env.done and step_num < 5:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    tools=tools,
+                    tool_choice="auto"
+                )
 
-        message = response.choices[0].message
+                message = response.choices[0].message
 
-        if not message.tool_calls:
-            break
+                if not message.tool_calls:
+                    break
 
-        tool_call = message.tool_calls[0]
-        action = tool_call.function.name
+                tool_call = message.tool_calls[0]
+                action = tool_call.function.name
 
-        try:
-            params = json.loads(tool_call.function.arguments)
-        except:
-            params = {}
+                try:
+                    params = json.loads(tool_call.function.arguments)
+                except:
+                    params = {}
 
-        print(f'[STEP] {{"step": {step_num}, "action": "{action}", "params": {json.dumps(params)}}}')
+                print(f'[STEP] {{"step": {step_num}, "action": "{action}", "params": {json.dumps(params)}}}')
 
-        try:
-            result = getattr(env, action)(**params)
-        except Exception as e:
-            result = str(e)
+                try:
+                    result = getattr(env, action)(**params)
+                except Exception as e:
+                    result = str(e)
 
-        # Add tool call to conversation
-        messages.append({
-            "role": "assistant",
-            "content": None,
-            "tool_calls": [
-                {
-                    "id": tool_call.id,
-                    "type": "function",
-                    "function": {
-                        "name": action,
-                        "arguments": tool_call.function.arguments
-                    }
-                }
-            ]
-        })
+                messages.append({
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [{
+                        "id": tool_call.id,
+                        "type": "function",
+                        "function": {
+                            "name": action,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }]
+                })
 
-        messages.append({
-            "role": "tool",
-            "tool_call_id": tool_call.id,
-            "content": str(result)
-        })
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": str(result)
+                })
 
-        step_num += 1
+                step_num += 1
 
+            except Exception as e:
+                print(f"[ERROR] Step failed: {e}")
+                break
+
+    except Exception as e:
+        print(f"[ERROR] Episode failed: {e}")
 
     if env.meeting_booked:
         score = 0.9
@@ -109,5 +105,15 @@ def run_episode(task_id="easy"):
 if __name__ == "__main__":
     tasks = ["easy", "medium", "hard"]
 
-    for tid in tasks:
-        run_episode(tid)
+    for task_id in tasks:
+        try:
+            run_episode(task_id)
+        except Exception as e:
+            print(f"[FATAL ERROR] {task_id}: {e}")
+
+       
+            print(
+                f'[END] {{"task_id": "{task_id}", '
+                f'"reward": 0.1, '
+                f'"done": false}}'
+            )
