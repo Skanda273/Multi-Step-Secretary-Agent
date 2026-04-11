@@ -1,9 +1,10 @@
 import os
 import json
-import sys
+import time
 from openai import OpenAI
 from environment import SecretaryEnv
 from tools_schema import tools
+from grader import grade_easy, grade_medium, grade_hard
 
 def run_episode(task_id="easy"):
     try:
@@ -13,7 +14,7 @@ def run_episode(task_id="easy"):
 
         client = OpenAI(
             base_url=os.environ.get("API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
-            api_key=os.environ.get("API_KEY", os.environ.get("GEMINI_API_KEY", "AIzaSyCL9mFCRHXcwsCmzX5LXG7eh9xbYRQ5yBs"))
+            api_key=os.environ.get("API_KEY", os.environ.get("GEMINI_API_KEY", ""))
         )
         model = os.environ.get("MODEL_NAME", "gemini-2.5-flash")
 
@@ -39,14 +40,16 @@ def run_episode(task_id="easy"):
                     tool_choice="auto"
                 )
             except Exception as e:
+                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    print(f"[RATE LIMIT] Waiting 15s before retry...")
+                    time.sleep(15)
+                    continue
                 print(f"[ERROR] LLM call failed: {e}")
                 break
 
             message = response.choices[0].message
 
             if not message.tool_calls:
-                # force minimal valid score instead of breaking badly
-                env.reward = max(env.reward, 0.05)
                 break
 
             tool_call = message.tool_calls[0]
@@ -66,16 +69,7 @@ def run_episode(task_id="easy"):
             messages.append({
                 "role": "assistant",
                 "content": None,
-                "tool_calls": [
-                    {
-                        "id": tool_call.id,
-                        "type": "function",
-                        "function": {
-                            "name": action,
-                            "arguments": tool_call.function.arguments
-                        }
-                    }
-                ]
+                "tool_calls": [tool_call],
             })
 
             messages.append({
@@ -86,23 +80,21 @@ def run_episode(task_id="easy"):
 
             step_num += 1
 
-            # Determine score safely ensuring it remains between 0.01 and 0.99
-            if getattr(env, 'meeting_booked', False) or getattr(env, 'done', False):
-                score = 0.90
-            elif getattr(env, 'calendar_checked', False):
-                score = 0.60
-            elif getattr(env, 'employee_id', False):
-                score = 0.30
-            else:
-                score = 0.15
-                
-            print(f'[END] {{"task_id": "{task_id}", "reward": {score:.2f}, "done": {str(env.done).lower()}}}')
+        # Use grader to compute final score
+        if task_id == "easy":
+            score = grade_easy(env)
+        elif task_id == "medium":
+            score = grade_medium(env)
+        else:
+            score = grade_hard(env)
+
+        print(f'[END] {{"task_id": "{task_id}", "reward": {score:.2f}, "done": {str(env.done).lower()}}}')
         return score
 
     except Exception as e:
         print(f"[CRITICAL ERROR] Entire episode failed: {e}")
         score = 0.15
-        print(f'[END] {{"task_id": "{task_id}", "reward": {score:.2f}, "done": false}}')
+        print(f'[END] {{"task_id": "{task_id}", "reward": 0.15, "done": false}}')
         return score
 
 
