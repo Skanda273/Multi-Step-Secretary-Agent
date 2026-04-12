@@ -4,9 +4,13 @@ from openai import OpenAI
 
 class LLMAgent:
     def __init__(self):
+        api_key = os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
+        if not api_key:
+            print("[LLMAgent WARNING] No OpenAI API key found. LLM calls will fail without OPENAI_API_KEY or API_KEY.")
+
         self.client = OpenAI(
             base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
-            api_key=os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
+            api_key=api_key
         )
         self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
