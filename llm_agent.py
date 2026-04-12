@@ -4,17 +4,24 @@ from openai import OpenAI
 
 class LLMAgent:
     def __init__(self):
-        api_key = os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
-        if not api_key:
-            print("[LLMAgent WARNING] No OpenAI API key found. LLM calls will fail without OPENAI_API_KEY or API_KEY.")
+        self.api_base_url = os.environ.get("API_BASE_URL")
+        self.api_key = os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY")
 
-        self.client = OpenAI(
-            base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
-            api_key=api_key
-        )
+        if not self.api_base_url or not self.api_key:
+            print("[LLMAgent WARNING] Missing API_BASE_URL or API_KEY. LLM calls will be disabled.")
+            self.client = None
+        else:
+            self.client = OpenAI(
+                base_url=self.api_base_url,
+                api_key=self.api_key
+            )
+
         self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
     def get_action(self, messages, tools):
+        if not self.client:
+            return None, None
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
