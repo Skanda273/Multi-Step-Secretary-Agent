@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add nested project to path
+project_root = Path(__file__).resolve().parent / "Multi-Step-Secretary-Agent-main"
+sys.path.insert(0, str(project_root))
+
+
 def grade_easy(env):
     """
     Easy task grading
@@ -32,3 +40,4 @@ def grade_hard(env):
         return 0.55
     else:
         return 0.25
+
