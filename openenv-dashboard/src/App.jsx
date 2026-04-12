@@ -5,20 +5,43 @@ import { Terminal, Copy, RotateCcw, Play, CheckCircle2, XCircle, Clock, ChevronR
 const mockRunAgent = async (task, currentState, onStep) => {
   await new Promise(r => setTimeout(r, 800));
 
-  const empName = currentState.employee || "John";
-  const empDate = currentState.date || "Friday";
+  let empName = "John";
+  let empDate = "Friday";
+  let empTime = "3pm";
+
+  const normalizedTask = task.trim();
+  const fullMatch = normalizedTask.match(/(?:for|with)\s+(.+?)\s+on\s+(.+?)\s+at\s+(.+)$/i);
+  const nameMatch = normalizedTask.match(/(?:for|with)\s+([A-Za-z][A-Za-z0-9 .'_-]+?)(?=\s+on|\s+at|$)/i);
+  const dateMatch = normalizedTask.match(/on\s+([A-Za-z0-9\s,-]+)/i);
+  const timeMatch = normalizedTask.match(/at\s+([0-9]{1,2}(?::[0-9]{2})?\s*(?:am|pm)?)/i);
+
+  if (fullMatch) {
+    empName = fullMatch[1].trim();
+    empDate = fullMatch[2].trim();
+    empTime = fullMatch[3].trim();
+  } else {
+    if (nameMatch) empName = nameMatch[1].trim();
+    if (dateMatch) empDate = dateMatch[1].trim();
+    if (timeMatch) empTime = timeMatch[1].trim();
+
+    empName = empName || currentState.employee || "John";
+    empDate = empDate || currentState.date || "Friday";
+    empTime = empTime || currentState.time || "3pm";
+  }
+
+  const employeeId = `EMP_${empName.toUpperCase().replace(/\s+/g, '_')}_123`;
 
   const steps = [
     { name: 'Get_Employee_ID', args: { name: empName }, duration: '120ms', success: true, reward: 10 },
-    { name: 'Check_Calendar', args: { employee_id: 'E123', date: empDate }, duration: '340ms', success: true, reward: 15 },
-    { name: 'Book_Meeting', args: { employee_id: 'E123', time: '3pm' }, duration: '450ms', success: true, reward: 25 },
+    { name: 'Check_Calendar', args: { employee_id: employeeId, date: empDate }, duration: '340ms', success: true, reward: 15 },
+    { name: 'Book_Meeting', args: { employee_id: employeeId, time: empTime }, duration: '450ms', success: true, reward: 25 },
   ];
 
   const states = [
     { ...currentState, employee: empName, employee_id: null, date: empDate, calendar_checked: false, meeting_booked: false },
-    { ...currentState, employee: empName, employee_id: "E123", date: empDate, calendar_checked: false, meeting_booked: false },
-    { ...currentState, employee: empName, employee_id: "E123", date: empDate, calendar_checked: true, meeting_booked: false },
-    { ...currentState, employee: empName, employee_id: "E123", date: empDate, calendar_checked: true, meeting_booked: true }
+    { ...currentState, employee: empName, employee_id: employeeId, date: empDate, calendar_checked: false, meeting_booked: false },
+    { ...currentState, employee: empName, employee_id: employeeId, date: empDate, calendar_checked: true, meeting_booked: false },
+    { ...currentState, employee: empName, employee_id: employeeId, date: empDate, calendar_checked: true, meeting_booked: true }
   ];
 
   for (let i = 0; i < steps.length; i++) {
