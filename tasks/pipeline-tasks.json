@@ -1,0 +1,50 @@
+[
+  {
+    "id": "task1",
+    "description": "Summarize the email content",
+    "grader": {
+      "type": "llm",
+      "criteria": "Summary should clearly include key points of the email"
+    }
+  },
+  {
+    "id": "task2",
+    "description": "Extract sender name from email",
+    "grader": {
+      "type": "string_match",
+      "expected": "From:"
+    }
+  },
+  {
+    "id": "task3",
+    "description": "Extract meeting time from email",
+    "grader": {
+      "type": "regex",
+      "pattern": "\\d{1,2}:\\d{2}"
+    }
+  },
+  {
+    "id": "task4",
+    "description": "Identify action items in the email",
+    "grader": {
+      "type": "llm",
+      "criteria": "Response should list actionable tasks mentioned in the email"
+    }
+  },
+  {
+    "id": "task5",
+    "description": "Detect email priority (high/medium/low)",
+    "grader": {
+      "type": "llm",
+      "criteria": "Priority classification should match urgency in the email"
+    }
+  },
+  {
+    "id": "task6",
+    "description": "Generate a professional reply email",
+    "grader": {
+      "type": "llm",
+      "criteria": "Reply should be polite, relevant, and complete"
+    }
+  }
+]
