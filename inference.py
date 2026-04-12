@@ -41,7 +41,8 @@ def run_episode(task_id="easy"):
     env.difficulty = task_id
     instruction = env.reset()
 
-    print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
+    model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+    print(f"[START] task={task_id} env=secretary model={model}")
 
     client = None
     if USE_LLM:
@@ -50,14 +51,14 @@ def run_episode(task_id="easy"):
             api_key=API_KEY
         )
 
-    model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
-
     messages = [
         {"role": "system", "content": "Follow steps: get_employee_id → check_calendar → book_meeting"},
         {"role": "user", "content": instruction}
     ]
 
     step_num = 0
+    rewards = []
+    last_error = None
     default_name = "John"
     if task_id == "medium":
         default_name = "Alice"
@@ -86,18 +87,27 @@ def run_episode(task_id="easy"):
                 action = "book_meeting"
                 params = {"time": "10AM"}
 
-        print(f'[STEP] {{"step": {step_num}, "action": "{action}", "params": {json.dumps(params)}}}')
-
         try:
             result = getattr(env, action)(**params)
+            last_error = None
         except Exception as e:
             result = str(e)
+            last_error = str(e)
 
-        print(f'[RESULT] {{"step": {step_num}, "result": "{result}"}}')
+        reward_str = "1.00" if env.done else "0.00"
+        rewards.append(reward_str)
+
+        action_str = f"{action}({json.dumps(params)})"
+        error_str = last_error if last_error else "null"
+        print(f"[STEP] step={step_num+1} action={action_str} reward={reward_str} done={str(env.done).lower()} error={error_str}")
+
         messages.append({"role": "assistant", "content": result})
         step_num += 1
 
-    print(f'[END] {{"task_id": "{task_id}", "steps": {step_num}, "done": {env.done}, "reward": {env.reward}}}')
+    success = str(env.done).lower()
+    score = f"{env.reward:.2f}"
+    rewards_str = ",".join(rewards)
+    print(f"[END] success={success} steps={step_num} score={score} rewards={rewards_str}")
     return env
 
 
