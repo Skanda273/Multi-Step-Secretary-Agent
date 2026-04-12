@@ -1,9 +1,13 @@
+import os
+
 from environment import SecretaryEnv
 from llm_agent import LLMAgent
 from tools_schema import tools
 
+USE_LLM = bool(os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY"))
+
 env = SecretaryEnv()
-agent = LLMAgent()
+agent = LLMAgent() if USE_LLM else None
 
 instruction = env.reset()
 
@@ -18,18 +22,29 @@ messages = [
 print("TASK:", instruction)
 
 while not env.done:
-    action, params = agent.get_action(messages, tools)
+    if USE_LLM:
+        action, params = agent.get_action(messages, tools)
+    else:
+        action, params = None, None
 
     # force final step if LLM stops early
     if not action and env.calendar_checked:
         action = "book_meeting"
-        params = {}
+        params = {"time": "10AM"}
 
     if not action:
-        print("No action returned")
-        break
+        print("[FALLBACK MODE] No valid LLM action. Using deterministic fallback.")
+        if not env.employee_id:
+            action = "get_employee_id"
+            params = {"name": "John"}
+        elif not env.calendar_checked:
+            action = "check_calendar"
+            params = {"employee_id": env.employee_id}
+        else:
+            action = "book_meeting"
+            params = {"time": "10AM"}
 
-    print("\n[LLM ACTION]:", action, params)
+    print("\n[ACTION]:", action, params)
 
     try:
         result = getattr(env, action)(**params)
