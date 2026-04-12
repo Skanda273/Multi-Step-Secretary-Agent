@@ -72,7 +72,7 @@ def grade_legend(env):
 
 def grade_godlike(env):
     if env.done:
-        return 1.0
+        return 0.99
     elif getattr(env, "calendar_checked", None):
         return 0.7
     else:
