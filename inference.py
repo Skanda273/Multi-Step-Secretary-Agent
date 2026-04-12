@@ -4,7 +4,9 @@ from openai import OpenAI
 from environment import SecretaryEnv
 from tools_schema import tools
 
-USE_LLM = bool(os.getenv("OPENAI_API_KEY"))
+API_BASE_URL = os.getenv("API_BASE_URL")
+API_KEY = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+USE_LLM = bool(API_BASE_URL and API_KEY)
 
 
 def get_llm_action(client, model, messages, tools):
@@ -41,10 +43,12 @@ def run_episode(task_id="easy"):
 
     print(f'[START] {{"task_id": "{task_id}", "instruction": "{instruction}"}}')
 
-    client = OpenAI(
-        base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
-        api_key=os.environ.get("API_KEY", os.environ.get("OPENAI_API_KEY", ""))
-    )
+    client = None
+    if USE_LLM:
+        client = OpenAI(
+            base_url=API_BASE_URL,
+            api_key=API_KEY
+        )
 
     model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
