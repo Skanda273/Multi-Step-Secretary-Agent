@@ -4,7 +4,9 @@ from environment import SecretaryEnv
 from llm_agent import LLMAgent
 from tools_schema import tools
 
-USE_LLM = bool(os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY"))
+API_BASE_URL = os.environ.get("API_BASE_URL")
+API_KEY = os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY")
+USE_LLM = bool(API_BASE_URL and API_KEY)
 
 env = SecretaryEnv()
 agent = LLMAgent() if USE_LLM else None
